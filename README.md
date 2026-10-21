@@ -45,4 +45,4 @@ This branch adds a third network, **Protarium**, next to Nintendo and Pretendo:
 - Switching Pretendo <-> Protarium only reinstalls patches (then reboots); switching to/from Nintendo also swaps the friend account.
 - Azahar: the URL replacement rules are registered per network (Protarium also remaps the eShop Ninja host).
 
-Reconstructed from the released Nimbus Protarium build on top of upstream Nimbus 2.2.0; not yet built or tested on hardware.
+Based on upstream Nimbus 2.2.0. The source of the released Protarium build was lost, so this tree was rewritten from the behaviour of that build: it has not been compiled from this tree yet.
