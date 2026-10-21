@@ -14,6 +14,7 @@
 #include "../sysmodules/acta.hpp"
 #include "../sysmodules/httpc.hpp"
 #include "../plgldr.h"
+#include "../networks.hpp"
 
 constexpr Result ResultFPDLocalAccountNotExists = 0xC880C4ED; // FPD::LocalAccountNotExists
 const char *NIMBUS_PLUGIN = "/luma/plugins/nimbus.3gx";
@@ -116,7 +117,7 @@ Result MainUI::createAccount(MainStruct *mainStruct, u8 friend_account_id, NascE
     return rc;
 }
 
-Result MainUI::handleAzahar(u8 friend_account_id) {
+Result MainUI::handleAzahar(Network network) {
     s64 emu_id = 0;
     svcGetSystemInfo(&emu_id, 0x20000, 0);
 
@@ -125,47 +126,50 @@ Result MainUI::handleAzahar(u8 friend_account_id) {
         return 0;
     }
 
-    std::array<std::string, 3> patterns = {{
-        {"nintendowifi\\.net"},
-        {"nintendo\\.net"},
-        {"pokemon-gl\\.com"}
+    struct Rule {
+        const char *pattern;
+        const char *replacement; // nullptr: the rule must not be registered for this network
+    };
+
+    // Pretendo rewrites the three Nintendo domains. Protarium also needs the eShop's Ninja host,
+    // which has its own shorter hostname (the replacement must keep the exact length).
+    const char *domain = network == Network::Protarium ? "protarium.lol" : "pretendo.cc";
+    const bool enabled = network != Network::Nintendo;
+    const std::array<Rule, 4> rules = {{
+        {"ninja\\.ctr\\.shop\\.nintendo\\.net", network == Network::Protarium ? "ninja.ctr.shp.protarium.lol" : nullptr},
+        {"nintendowifi\\.net", enabled ? domain : nullptr},
+        {"nintendo\\.net", enabled ? domain : nullptr},
+        {"pokemon-gl\\.com", enabled ? domain : nullptr},
     }};
-    const std::string replacement = "pretendo.cc";
 
     Result res = httpcInit(0x1000);
-    if (friend_account_id == 2) {
-        // Register Pretendo replacement URLs
-        if (R_SUCCEEDED(res)) {
-            for (const auto& pattern : patterns) {
-                res = HTTPC_Azahar_RegisterURLReplacement(pattern.c_str(), replacement.c_str(), pattern.size(), replacement.size());
-                if (R_FAILED(res)) {
-                    // If the rule already exists clear it and register again
-                    if (res == MAKERESULT(RL_STATUS, RS_INVALIDARG, RM_HTTP, RD_ALREADY_EXISTS)) {
-                        res = HTTPC_Azahar_UnregisterURLReplacement(pattern.c_str(), pattern.size());
-                        if (R_FAILED(res)) {
-                            break;
-                        }
-                        res = HTTPC_Azahar_RegisterURLReplacement(pattern.c_str(), replacement.c_str(), pattern.size(), replacement.size());
-                        if (R_FAILED(res)) {
-                            break;
-                        }
-                    } else {
-                        break;
-                    }
+    if (R_FAILED(res)) {
+        return res;
+    }
+
+    for (const auto& rule : rules) {
+        const size_t patternSize = strlen(rule.pattern);
+        if (rule.replacement) {
+            const size_t replacementSize = strlen(rule.replacement);
+            res = HTTPC_Azahar_RegisterURLReplacement(rule.pattern, rule.replacement, patternSize, replacementSize);
+            // If the rule already exists clear it and register again
+            if (res == MAKERESULT(RL_STATUS, RS_INVALIDARG, RM_HTTP, RD_ALREADY_EXISTS)) {
+                res = HTTPC_Azahar_UnregisterURLReplacement(rule.pattern, patternSize);
+                if (R_SUCCEEDED(res)) {
+                    res = HTTPC_Azahar_RegisterURLReplacement(rule.pattern, rule.replacement, patternSize, replacementSize);
                 }
             }
-        }
-    } else {
-        // Unregister Pretendo replacement URLs
-        for (const auto& pattern : patterns) {
-            res = HTTPC_Azahar_UnregisterURLReplacement(pattern.c_str(), pattern.size());
-            if (R_FAILED(res)) {
-                break;
-            } else {
-                // Result may have a non-failure info value indicating that the pattern
-                // was not registered, clear it.
+        } else {
+            res = HTTPC_Azahar_UnregisterURLReplacement(rule.pattern, patternSize);
+            // Result may have a non-failure info value indicating that the pattern
+            // was not registered, clear it.
+            if (R_SUCCEEDED(res)) {
                 res = 0;
             }
+        }
+
+        if (R_FAILED(res)) {
+            break;
         }
     }
 
@@ -500,6 +504,39 @@ void MainUI::drawPrompt(MainStruct* mainStruct)
                  0.5f, 0.5f, white);
 }
 
+// Bottom screen: one card per network, white bar on the selected one, "Active" under the loaded one
+static void drawNetworkCards(MainStruct *mainStruct)
+{
+    static const u32 colors[3] = {
+        C2D_Color32(0x4a, 0x6f, 0x9f, 0xff), // Nintendo
+        C2D_Color32(0x5e, 0x43, 0x92, 0xff), // Pretendo
+        C2D_Color32(0x23, 0x7a, 0x79, 0xff)  // Protarium
+    };
+
+    for (u8 i = 0; i < 3; i++) {
+        const Network network = static_cast<Network>(i);
+        const float x = 7.0f + 104.0f * i;
+
+        C2D_DrawRectangle(x, 70.0f, 0.2f, 98.0f, 92.0f, colors[i], colors[i], colors[i], colors[i]);
+        if (mainStruct->buttonSelected == network) {
+            C2D_DrawRectSolid(x, 70.0f, 0.3f, 98.0f, 3.0f, C2D_Color32(255, 255, 255, 255));
+        }
+
+        C2D_Text name;
+        C2D_TextBufClear(textBuf);
+        C2D_TextFontParse(&name, font, textBuf, networkName(network));
+        C2D_TextOptimize(&name);
+        C2D_DrawText(&name, C2D_WithColor | C2D_AlignCenter, x + 49.0f, 100.0f, 0.4f, 0.48f, 0.48f, C2D_Color32(255, 255, 255, 255));
+
+        if (mainStruct->currentAccount == network) {
+            C2D_Text active;
+            C2D_TextFontParse(&active, font, textBuf, "Active");
+            C2D_TextOptimize(&active);
+            C2D_DrawText(&active, C2D_WithColor | C2D_AlignCenter, x + 49.0f, 134.0f, 0.4f, 0.42f, 0.42f, C2D_Color32(255, 255, 255, 255));
+        }
+    }
+}
+
 bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_RenderTarget* bottom_screen, u32 kDown, u32 kHeld, touchPosition touch)
 {
     C2D_SceneBegin(top_screen);
@@ -690,44 +727,34 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
     C2D_SceneBegin(bottom_screen);
     DrawControls();
 
-    if (mainStruct->buttonSelected == NascEnvironment::NASC_ENV_Prod) {
-        if (mainStruct->currentAccount == NascEnvironment::NASC_ENV_Prod) {
-            C2D_DrawSprite(&mainStruct->nintendo_loaded_selected);
-            C2D_DrawSprite(&mainStruct->pretendo_unloaded_deselected);
-        }
-        else {
-            C2D_DrawSprite(&mainStruct->nintendo_unloaded_selected);
-            C2D_DrawSprite(&mainStruct->pretendo_loaded_deselected);
-        }
-    }
-    else if (mainStruct->buttonSelected == NascEnvironment::NASC_ENV_Test) {
-        if (mainStruct->currentAccount == NascEnvironment::NASC_ENV_Test) {
-            C2D_DrawSprite(&mainStruct->nintendo_unloaded_deselected);
-            C2D_DrawSprite(&mainStruct->pretendo_loaded_selected);
-        }
-        else {
-            C2D_DrawSprite(&mainStruct->nintendo_loaded_deselected);
-            C2D_DrawSprite(&mainStruct->pretendo_unloaded_selected);
-        }
-    }
-    C2D_DrawSprite(&mainStruct->header);
+    drawNetworkCards(mainStruct);
     drawPrompt(mainStruct);
 
     // Only allow user interaction when the system doesn't need a restart
     if (!mainStruct->needsReboot && !mainStruct->prompt.active) {
-        // handle touch input
+        // handle touch input: three 98px wide cards at x = 7, 111 and 215, with a few dead pixels between them
         if (kDown & KEY_TOUCH) {
-            if ((touch.px >= 165 && touch.px <= 165 + 104) && (touch.py >= 59 && touch.py <= 59 + 113)) {
-                mainStruct->buttonSelected = NascEnvironment::NASC_ENV_Prod;
-                mainStruct->buttonWasPressed = true;
-            }
-            else if ((touch.px >= 49 && touch.px <= 49 + 104) && (touch.py >= 59 && touch.py <= 59 + 113)) {
-                mainStruct->buttonSelected = NascEnvironment::NASC_ENV_Test;
-                mainStruct->buttonWasPressed = true;
+            if (touch.px > 6 && touch.py >= 70 && touch.py <= 70 + 92) {
+                if (touch.px <= 104) {
+                    mainStruct->buttonSelected = Network::Nintendo;
+                    mainStruct->buttonWasPressed = true;
+                }
+                else if (touch.px > 110 && touch.px <= 208) {
+                    mainStruct->buttonSelected = Network::Pretendo;
+                    mainStruct->buttonWasPressed = true;
+                }
+                else if (touch.px >= 215 && touch.px <= 312) {
+                    mainStruct->buttonSelected = Network::Protarium;
+                    mainStruct->buttonWasPressed = true;
+                }
             }
         }
-        else if (kDown & KEY_LEFT || kDown & KEY_RIGHT) {
-            mainStruct->buttonSelected = mainStruct->buttonSelected == NascEnvironment::NASC_ENV_Test ? NascEnvironment::NASC_ENV_Prod : NascEnvironment::NASC_ENV_Test;
+
+        if (kDown & KEY_LEFT) {
+            mainStruct->buttonSelected = static_cast<Network>((static_cast<u8>(mainStruct->buttonSelected) + 2) % 3);
+        }
+        if (kDown & KEY_RIGHT) {
+            mainStruct->buttonSelected = static_cast<Network>((static_cast<u8>(mainStruct->buttonSelected) + 1) % 3);
         }
 
         if (mainStruct->prompt.active) {
@@ -776,24 +803,39 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
         // Clear any previous logs
         mainStruct->errorString[0] = 0;
 
-        // If the chosen account is the one we are already logged into, exit without rebooting
-        if (mainStruct->currentAccount == mainStruct->buttonSelected) return true;
+        const Network current = mainStruct->currentAccount;
+        const Network selected = mainStruct->buttonSelected;
 
-        u8 accountId = (u8)mainStruct->buttonSelected + 1; // by default set accountId to nasc environment + 1
+        // Nintendo uses friend account 1; Pretendo and Protarium share account 2
+        u8 accountId = selected == Network::Nintendo ? 1 : 2;
 
-        Result rc = unloadAccount(mainStruct);
-        if (R_SUCCEEDED(rc)) {
-            rc = switchAccounts(mainStruct, accountId);
-            if (rc == ResultFPDLocalAccountNotExists && accountId == 2) {
-                // Clear the error to allow createAccount to override it
-                memset(mainStruct->errorString, 0, 256);
-                rc = createAccount(mainStruct, accountId, NascEnvironment::NASC_ENV_Test);
+        // Switching between Pretendo and Protarium only changes the patches, the account stays loaded
+        const bool switchAccount = (current == Network::Nintendo) != (selected == Network::Nintendo) || mainStruct->consoleOnDevEnv;
+
+        Result rc = 0;
+        if (switchAccount) {
+            rc = unloadAccount(mainStruct);
+            if (R_SUCCEEDED(rc)) {
+                rc = switchAccounts(mainStruct, accountId);
+                if (rc == ResultFPDLocalAccountNotExists && accountId == 2) {
+                    // Clear the error to allow createAccount to override it
+                    memset(mainStruct->errorString, 0, 256);
+                    rc = createAccount(mainStruct, accountId, NascEnvironment::NASC_ENV_Test);
+                }
             }
         }
 
         if (R_SUCCEEDED(rc)) {
-            rc = handleAzahar(accountId);
-            LOG_NIMBUS_ERROR(mainStruct, std::format("Failed to apply Azahar configuration: {}", rc).c_str());
+            rc = handleAzahar(selected);
+            if (R_FAILED(rc)) {
+                LOG_NIMBUS_ERROR(mainStruct, std::format("Failed to apply Azahar configuration: {}", rc).c_str());
+            }
+        }
+
+        if (R_SUCCEEDED(rc) && !installNetworkPatches(selected)) {
+            rc = -1;
+            // Logs won't override any previous errors
+            LOG_NIMBUS_ERROR(mainStruct, std::format("Network patches: {}", networkPatchError).c_str());
         }
 
         if (R_FAILED(rc)) {

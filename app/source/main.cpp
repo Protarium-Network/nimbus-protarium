@@ -8,6 +8,7 @@
 #include "common.hpp"
 #include "states/LumaValidation.hpp"
 #include "states/MainUI.hpp"
+#include "networks.hpp"
 
 MainStruct mainStruct = MainStruct();
 
@@ -68,8 +69,13 @@ int main()
 	u8 nascEnvironment, nfsType, nfsNo;
 	FRD_GetServerTypes(&nascEnvironment, &nfsType, &nfsNo);
 	
-	mainStruct.buttonSelected = static_cast<NascEnvironment>(nascEnvironment);
-	mainStruct.currentAccount = mainStruct.buttonSelected;
+	mainStruct.consoleOnDevEnv = nascEnvironment == static_cast<u8>(NascEnvironment::NASC_ENV_Dev);
+	mainStruct.currentAccount = static_cast<Network>(nascEnvironment);
+	if (nascEnvironment == static_cast<u8>(NascEnvironment::NASC_ENV_Test) && activeNetworkIsProtarium()) {
+		// Pretendo and Protarium both use the test environment
+		mainStruct.currentAccount = Network::Protarium;
+	}
+	mainStruct.buttonSelected = mainStruct.currentAccount;
 
 	// NULL-terminate string
 	mainStruct.errorString[0] = 0;

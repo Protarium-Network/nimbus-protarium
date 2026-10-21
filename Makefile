@@ -53,6 +53,10 @@ all:
 	@cp -r patches/miiverse/out/* $(PATCHES_OUT_FOLDER)/$(MIIVERSE_OUT_EUR)
 	@cp -r patches/miiverse/*.pem $(PATCHES_OUT_FOLDER)/$(NIMBUS_UPDATE_OUT)
 
+# prebuilt per-network patch sets (see variants/README.md)
+	@mkdir -p $(PATCHES_OUT_FOLDER)/3ds/nimbus
+	@cp -r variants $(PATCHES_OUT_FOLDER)/3ds/nimbus/variants
+
 # build plugin
 	@$(MAKE) -C plugin
 

@@ -31,8 +31,8 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-APP_TITLE       := 	Nimbus
-APP_DESCRIPTION := 	Nimbus
+APP_TITLE       := 	Nimbus Protarium
+APP_DESCRIPTION := 	Nintendo, Pretendo, Protarium
 APP_AUTHOR	:=	Zaksabeast, shutterbug2000
 TARGET		:=	nimbus
 BUILD		:=	build

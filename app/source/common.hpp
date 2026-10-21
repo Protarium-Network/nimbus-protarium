@@ -18,6 +18,14 @@ enum class NascEnvironment : u8 {
 	NASC_ENV_Dev = 2
 };
 
+// The three entries shown on the bottom screen. Pretendo and Protarium share the Pretendo friend account
+// (slot 2); they only differ by the installed patches (see networks.hpp).
+enum class Network : u8 {
+	Nintendo = 0,
+	Pretendo = 1,
+	Protarium = 2
+};
+
 enum class CFWSystemInfoField : s32 {
 	FirmwareVersion = 0,
 	CommitHash = 1,
@@ -72,8 +80,9 @@ struct MainStruct {
 	u32 state = 0;
 	u32 lastState = 0;
 
-	NascEnvironment currentAccount = NascEnvironment::NASC_ENV_Prod;
-	NascEnvironment buttonSelected = NascEnvironment::NASC_ENV_Prod;
+	Network currentAccount = Network::Nintendo;
+	Network buttonSelected = Network::Nintendo;
+	bool consoleOnDevEnv = false; // the console's NASC environment is "dev": always do a full account switch
 
 	bool firstRunOfState = true;
 

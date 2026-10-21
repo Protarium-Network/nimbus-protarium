@@ -33,3 +33,16 @@ Thanks to:
 - [Universal-Core](https://github.com/Universal-Team/Universal-Core) for the string drawing functions
 - [Fangal-Airbag](https://github.com/Fangal-Airbag) for making the account switcher GUI support button controls
 - All other 3DS researchers
+
+## Nimbus Protarium fork
+
+This branch adds a third network, **Protarium**, next to Nintendo and Pretendo:
+
+- Bottom screen shows three cards (Nintendo / Pretendo / Protarium). Select with touch, D-pad/Circle Pad + A.
+- Pretendo and Protarium share the Pretendo friend account (slot 2) and the "test" NASC environment; they differ only by
+  the Luma patches installed from `3ds/nimbus/variants/<network>/` (see `variants/README.md`). The installed network is
+  remembered in `/3ds/nimbus/active-network.txt`.
+- Switching Pretendo <-> Protarium only reinstalls patches (then reboots); switching to/from Nintendo also swaps the friend account.
+- Azahar: the URL replacement rules are registered per network (Protarium also remaps the eShop Ninja host).
+
+Reconstructed from the released Nimbus Protarium build on top of upstream Nimbus 2.2.0; not yet built or tested on hardware.
