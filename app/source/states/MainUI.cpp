@@ -133,7 +133,7 @@ Result MainUI::handleAzahar(Network network) {
 
     // Pretendo rewrites the three Nintendo domains. Protarium also needs the eShop's Ninja host,
     // which has its own shorter hostname (the replacement must keep the exact length).
-    const char *domain = network == Network::Protarium ? "protarium.lol" : "pretendo.cc";
+    const char *domain = network == Network::Protarium ? PROTARIUM_DOMAIN : "pretendo.cc";
     const bool enabled = network != Network::Nintendo;
     const std::array<Rule, 4> rules = {{
         {"ninja\\.ctr\\.shop\\.nintendo\\.net", network == Network::Protarium ? "ninja.ctr.shp.protarium.lol" : nullptr},

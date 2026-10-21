@@ -12,6 +12,15 @@
 
 #define NIMBUS_UPDATE_PATH "/3ds/nimbus/update"
 
+// Which patch set the Protarium network installs (a directory of 3ds/nimbus/variants/) and which domain the Azahar
+// URL rules point to. Override at build time for a test build: make PROTARIUM_VARIANT=protarium-online PROTARIUM_DOMAIN=protarium.online
+#ifndef PROTARIUM_VARIANT
+#define PROTARIUM_VARIANT "protarium"
+#endif
+#ifndef PROTARIUM_DOMAIN
+#define PROTARIUM_DOMAIN "protarium.lol"
+#endif
+
 enum class NascEnvironment : u8 {
 	NASC_ENV_Prod = 0, // nintendo
 	NASC_ENV_Test = 1, // pretendo

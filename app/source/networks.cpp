@@ -122,7 +122,8 @@ bool installNetworkPatches(Network network)
 		if (mkdir(dir, 0777) != 0 && errno != EEXIST) return fail("Directory", dir);
 	}
 
-	const std::string variantDir = std::string(NIMBUS_VARIANTS_PATH) + networkDir(network) + "/";
+	const char *variantName = network == Network::Protarium ? PROTARIUM_VARIANT : networkDir(network);
+	const std::string variantDir = std::string(NIMBUS_VARIANTS_PATH) + variantName + "/";
 
 	// The Miiverse patch reads its CA from /3ds/<pem>
 	if (network != Network::Nintendo) {

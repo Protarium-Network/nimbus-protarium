@@ -70,6 +70,12 @@ CFLAGS	    :=	-g -Wall $(OPTIMIZE) -mword-relocations \
 CFLAGS	    +=	$(INCLUDE) -D__3DS__
 
 CXXFLAGS	:=  $(CFLAGS) -fno-rtti -fno-exceptions -std=c++20
+ifdef PROTARIUM_VARIANT
+CXXFLAGS	+= -DPROTARIUM_VARIANT=\"$(PROTARIUM_VARIANT)\"
+endif
+ifdef PROTARIUM_DOMAIN
+CXXFLAGS	+= -DPROTARIUM_DOMAIN=\"$(PROTARIUM_DOMAIN)\"
+endif
 
 ASFLAGS	    :=	-g $(ARCH)
 LDFLAGS	     =	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) $(OPTIMIZE)
