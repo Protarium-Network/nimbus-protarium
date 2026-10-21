@@ -26,19 +26,28 @@ static void sceneInit(void)
 	C2D_SpriteFromSheet(&mainStruct.pretendo_unloaded_selected, spriteSheet, sheet_pretendo_unloaded_selected_idx);
 	C2D_SpriteFromSheet(&mainStruct.pretendo_loaded_selected, spriteSheet, sheet_pretendo_loaded_selected_idx);
 	C2D_SpriteFromSheet(&mainStruct.pretendo_loaded_deselected, spriteSheet, sheet_pretendo_loaded_deselected_idx);
+	C2D_SpriteFromSheet(&mainStruct.protarium_unloaded_deselected, spriteSheet, sheet_protarium_unloaded_deselected_idx);
+	C2D_SpriteFromSheet(&mainStruct.protarium_unloaded_selected, spriteSheet, sheet_protarium_unloaded_selected_idx);
+	C2D_SpriteFromSheet(&mainStruct.protarium_loaded_selected, spriteSheet, sheet_protarium_loaded_selected_idx);
+	C2D_SpriteFromSheet(&mainStruct.protarium_loaded_deselected, spriteSheet, sheet_protarium_loaded_deselected_idx);
 	C2D_SpriteSetCenter(&mainStruct.top, 0.49f, 0.49f);
 	C2D_SpriteSetPos(&mainStruct.top, 400/2, 240/2);
 	C2D_SpriteSetPos(&mainStruct.go_back, 0, 214);
 	C2D_SpriteSetPos(&mainStruct.header, 95, 14);
-	C2D_SpriteSetPos(&mainStruct.pretendo_loaded_selected, 49, 59);
-	C2D_SpriteSetPos(&mainStruct.pretendo_unloaded_selected, 49, 59);
-	C2D_SpriteSetPos(&mainStruct.pretendo_unloaded_deselected, 49, 59);
-	C2D_SpriteSetPos(&mainStruct.pretendo_loaded_deselected, 49, 59);
-	C2D_SpriteSetPos(&mainStruct.nintendo_loaded_selected, 165, 59);
-	C2D_SpriteSetPos(&mainStruct.nintendo_unloaded_selected, 165, 59);
-	C2D_SpriteSetPos(&mainStruct.nintendo_unloaded_deselected, 165, 59);
-	C2D_SpriteSetPos(&mainStruct.nintendo_loaded_deselected, 165, 59);
+	C2D_SpriteSetPos(&mainStruct.pretendo_loaded_selected, 108, 59);
+	C2D_SpriteSetPos(&mainStruct.pretendo_unloaded_selected, 108, 59);
+	C2D_SpriteSetPos(&mainStruct.pretendo_unloaded_deselected, 108, 59);
+	C2D_SpriteSetPos(&mainStruct.pretendo_loaded_deselected, 108, 59);
+	C2D_SpriteSetPos(&mainStruct.nintendo_loaded_selected, 4, 59);
+	C2D_SpriteSetPos(&mainStruct.nintendo_unloaded_selected, 4, 59);
+	C2D_SpriteSetPos(&mainStruct.nintendo_unloaded_deselected, 4, 59);
+	C2D_SpriteSetPos(&mainStruct.nintendo_loaded_deselected, 4, 59);
 	
+	C2D_SpriteSetPos(&mainStruct.protarium_unloaded_deselected, 212, 59);
+	C2D_SpriteSetPos(&mainStruct.protarium_unloaded_selected, 212, 59);
+	C2D_SpriteSetPos(&mainStruct.protarium_loaded_selected, 212, 59);
+	C2D_SpriteSetPos(&mainStruct.protarium_loaded_deselected, 212, 59);
+
 	textBuf = C2D_TextBufNew(4096); // initialize the text buffer with a max glyph count of 4096
 }
 

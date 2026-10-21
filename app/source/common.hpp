@@ -74,6 +74,10 @@ struct MainStruct {
 	C2D_Sprite pretendo_unloaded_selected;
 	C2D_Sprite pretendo_loaded_selected;
 	C2D_Sprite pretendo_loaded_deselected;
+	C2D_Sprite protarium_unloaded_deselected;
+	C2D_Sprite protarium_unloaded_selected;
+	C2D_Sprite protarium_loaded_selected;
+	C2D_Sprite protarium_loaded_deselected;
 	C2D_Sprite top;
 
 	u32 screen = 0;

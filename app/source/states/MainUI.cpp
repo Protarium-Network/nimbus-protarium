@@ -504,36 +504,24 @@ void MainUI::drawPrompt(MainStruct* mainStruct)
                  0.5f, 0.5f, white);
 }
 
-// Bottom screen: one card per network, white bar on the selected one, "Active" under the loaded one
+// Bottom screen: one button per network, highlighted when selected and tagged LOADED when it is the active one
 static void drawNetworkCards(MainStruct *mainStruct)
 {
-    static const u32 colors[3] = {
-        C2D_Color32(0x4a, 0x6f, 0x9f, 0xff), // Nintendo
-        C2D_Color32(0x5e, 0x43, 0x92, 0xff), // Pretendo
-        C2D_Color32(0x23, 0x7a, 0x79, 0xff)  // Protarium
+    // [network][loaded][selected]
+    C2D_Sprite *buttons[3][2][2] = {
+        {{&mainStruct->nintendo_unloaded_deselected, &mainStruct->nintendo_unloaded_selected},
+         {&mainStruct->nintendo_loaded_deselected, &mainStruct->nintendo_loaded_selected}},
+        {{&mainStruct->pretendo_unloaded_deselected, &mainStruct->pretendo_unloaded_selected},
+         {&mainStruct->pretendo_loaded_deselected, &mainStruct->pretendo_loaded_selected}},
+        {{&mainStruct->protarium_unloaded_deselected, &mainStruct->protarium_unloaded_selected},
+         {&mainStruct->protarium_loaded_deselected, &mainStruct->protarium_loaded_selected}},
     };
 
     for (u8 i = 0; i < 3; i++) {
         const Network network = static_cast<Network>(i);
-        const float x = 7.0f + 104.0f * i;
-
-        C2D_DrawRectangle(x, 70.0f, 0.2f, 98.0f, 92.0f, colors[i], colors[i], colors[i], colors[i]);
-        if (mainStruct->buttonSelected == network) {
-            C2D_DrawRectSolid(x, 70.0f, 0.3f, 98.0f, 3.0f, C2D_Color32(255, 255, 255, 255));
-        }
-
-        C2D_Text name;
-        C2D_TextBufClear(textBuf);
-        C2D_TextFontParse(&name, font, textBuf, networkName(network));
-        C2D_TextOptimize(&name);
-        C2D_DrawText(&name, C2D_WithColor | C2D_AlignCenter, x + 49.0f, 100.0f, 0.4f, 0.48f, 0.48f, C2D_Color32(255, 255, 255, 255));
-
-        if (mainStruct->currentAccount == network) {
-            C2D_Text active;
-            C2D_TextFontParse(&active, font, textBuf, "Active");
-            C2D_TextOptimize(&active);
-            C2D_DrawText(&active, C2D_WithColor | C2D_AlignCenter, x + 49.0f, 134.0f, 0.4f, 0.42f, 0.42f, C2D_Color32(255, 255, 255, 255));
-        }
+        const bool loaded = mainStruct->currentAccount == network;
+        const bool selected = mainStruct->buttonSelected == network;
+        C2D_DrawSprite(buttons[i][loaded][selected]);
     }
 }
 
