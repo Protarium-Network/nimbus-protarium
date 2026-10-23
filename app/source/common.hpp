@@ -154,7 +154,7 @@ void GetStringSize(float size, float *width, float *height, const char *text);
 */
 
 float GetStringHeight(float size, const char *text);
-void DrawString(float size, u32 color, std::string text, int flags);
+void DrawString(float size, u32 color, std::string text, int flags, float top = 8);
 
 void DrawControls();
 

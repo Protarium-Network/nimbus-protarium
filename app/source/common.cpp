@@ -23,7 +23,7 @@ float GetStringHeight(float size, const char *text) {
 	return height;
 }
 
-void DrawString(float size, u32 color, std::string text, int flags) {
+void DrawString(float size, u32 color, std::string text, int flags, float top) {
 	C2D_Text c2d_text;
 	
 	C2D_TextBufClear(textBuf);
@@ -32,7 +32,7 @@ void DrawString(float size, u32 color, std::string text, int flags) {
 	C2D_TextOptimize(&c2d_text);
 	
 	float x = 8;
-	float y = 8;
+	float y = top;
 	
 	float screenWidthBottom = 320;
 	float screenHeight = 240;
