@@ -525,6 +525,14 @@ static void drawNetworkCards(MainStruct *mainStruct)
     }
 }
 
+// The marker that says the PNID repair is done (or not needed). Quietly does nothing when the SD card is not writable.
+static void markPidHmacRepairDone()
+{
+    if (auto* marker = std::fopen("/3ds/nimbus/.pidhmac", "wb")) {
+        std::fclose(marker);
+    }
+}
+
 bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_RenderTarget* bottom_screen, u32 kDown, u32 kHeld, touchPosition touch)
 {
     C2D_SceneBegin(top_screen);
@@ -592,16 +600,17 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
     // Handle the pidHMAC fix migration (except if an error occured previously)
     if (!mainStruct->repairChecked && (mainStruct->errorString[0] == 0 || strncmp(mainStruct->errorString, "Nimbus has been updated!", sizeof("Nimbus has been updated!")) == 0)) {
         mainStruct->repairChecked = true;
+        mkdir("/3ds", 0777); // fresh installs and emulators may not have these
+        mkdir("/3ds/nimbus", 0777);
         u32 pretendo_account_index = 0;
         // Logs won't override any previous errors
         Result rc = 0;
         handleResult(ACT_GetAccountIndexOfFriendAccountId(&pretendo_account_index, 2), mainStruct, "Get PNID for repair check");
         if (pretendo_account_index == 0) { // If an account doesn't exist, we just create the dummy file. The friends server will provide the pidHMAC
-            auto* pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "wb");
-            std::fclose(pidHMACFixCheck);
+            markPidHmacRepairDone();
         }
 
-        if (auto* pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "rb"); !pidHMACFixCheck) {
+        if (auto* pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "rb"); !pidHMACFixCheck && pretendo_account_index != 0) {
             mainStruct->errorString[0] = 0; // Clear potential previous error
             // TODO - This thing isn't drawn when Nimbus required an update beforehand. How do we make this text render in that case?
             // For now, we put a hint on the upgrade screen about Internet requirements
@@ -613,8 +622,7 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
                     // Clear the error as it is not necessary
                     memset(mainStruct->errorString, 0, 256);
 
-                    pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "wb");
-                    std::fclose(pidHMACFixCheck);
+                    markPidHmacRepairDone();
                 } else {
                     // Leave the exclusive state as we need HTTP communications
                     handleResult(NDMU_LeaveExclusiveState(), mainStruct, "Leave exclusive state");
@@ -663,8 +671,7 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
 
                     if (!pidHMAC.empty()) {
                         if (repairAccountHMAC(mainStruct, pidHMAC.substr(0, 8).c_str())) {
-                            pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "wb");
-                            std::fclose(pidHMACFixCheck);
+                            markPidHmacRepairDone();
                         }
                     }
                 }
@@ -677,7 +684,7 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
             mainStruct->needsReboot = true;
             mainStruct->buttonWasPressed = false;
             return false;
-        } else {
+        } else if (pidHMACFixCheck) {
             std::fclose(pidHMACFixCheck);
         }
     }
