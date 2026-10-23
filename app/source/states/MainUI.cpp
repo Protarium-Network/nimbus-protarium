@@ -615,6 +615,7 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
             // TODO - This thing isn't drawn when Nimbus required an update beforehand. How do we make this text render in that case?
             // For now, we put a hint on the upgrade screen about Internet requirements
             DrawString(0.5f, C2D_Color32(255, 255, 0, 0xFF), "Upgrading Pretendo account... Ensure you have an Internet connection", 0);
+            bool repaired = false; // only a repair that went through needs the reboot, a failed one must not lock the app
             Result rc = unloadAccount(mainStruct);
             if (R_SUCCEEDED(rc)) {
                 rc = switchAccounts(mainStruct, 2);
@@ -623,6 +624,7 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
                     memset(mainStruct->errorString, 0, 256);
 
                     markPidHmacRepairDone();
+                    repaired = true;
                 } else {
                     // Leave the exclusive state as we need HTTP communications
                     handleResult(NDMU_LeaveExclusiveState(), mainStruct, "Leave exclusive state");
@@ -672,18 +674,23 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
                     if (!pidHMAC.empty()) {
                         if (repairAccountHMAC(mainStruct, pidHMAC.substr(0, 8).c_str())) {
                             markPidHmacRepairDone();
+                            repaired = true;
                         }
                     }
                 }
             }
 
-            // Logs won't override any previous errors
-            LOG_NIMBUS_ERROR(mainStruct, "Nimbus has been updated!");
+            if (repaired) {
+                // Logs won't override any previous errors
+                LOG_NIMBUS_ERROR(mainStruct, "Nimbus has been updated!");
 
-            aptSetHomeAllowed(false);
-            mainStruct->needsReboot = true;
-            mainStruct->buttonWasPressed = false;
-            return false;
+                aptSetHomeAllowed(false);
+                mainStruct->needsReboot = true;
+                mainStruct->buttonWasPressed = false;
+                return false;
+            }
+            // The repair failed (no Internet, no real account, emulator...): keep the error on screen but let the user
+            // switch networks. The repair is tried again at the next launch.
         } else if (pidHMACFixCheck) {
             std::fclose(pidHMACFixCheck);
         }
