@@ -14,9 +14,10 @@ go to `/luma/sysmodules/<id>.ips`; `000400300000BC02/BD02/BE02.ips` (Miiverse JP
 The Protarium `.ips` files here are the binary patches as released. Their sources are not in this repository yet, only a description
 of what they change: see `variants/protarium/PATCHES.md`.
 
-## protarium-online (test)
+## protarium (protarium.online) and protarium-lol
 
-`protarium-online/` is the `protarium/` set pointed at `protarium.online` instead of `protarium.lol`. It is generated, not hand edited:
+`protarium/` is what the Protarium button installs: the patches pointed at `protarium.online`. `protarium-lol/` is the previous
+set (`protarium.lol`), kept for reference. `protarium/` is generated from it, not hand edited:
 
     python variants/make_online_variant.py
 
@@ -25,8 +26,5 @@ Miiverse endpoint, and asserts that each new string fits where the old one was (
 Miiverse endpoint). Not changed: the nncs patch (2E02, still `nncs*.app.protarium.lol`) and the eShop rule inside the http
 patch (still maps to `ninja.ctr.shp.protarium.lol`).
 
-Build a test app that installs it and uses `.online` for the Azahar rules:
-
-    make PROTARIUM_VARIANT=protarium-online PROTARIUM_DOMAIN=protarium.online APP_TITLE="Nimbus Protarium (online test)"
-
-The http patch grows by 4 bytes at the end of its code cave; that is the one change that is not proven to fit, check it first on a console.
+Because the app copies `variants/protarium/` when you press Protarium, replacing that folder on the SD card is enough to move
+an already installed Nimbus to the new domain.

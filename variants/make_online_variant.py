@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build variants/protarium-online/ from variants/protarium/: same patches, domain protarium.lol -> protarium.online.
+"""Build variants/protarium/ (protarium.online) from variants/protarium-lol/: same patches, new domain.
 
 Only the strings that point at the Protarium servers are rewritten; every size is checked against the room the
 patch has (see the notes per module). The nncs patch (2E02), the ssl patch (2F02) and the CA are copied as they are.
@@ -12,8 +12,8 @@ import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, 'protarium')
-DST = os.path.join(HERE, 'protarium-online')
+SRC = os.path.join(HERE, 'protarium-lol')
+DST = os.path.join(HERE, 'protarium')
 OLD, NEW = b'protarium.lol', b'protarium.online'
 
 sys.path.insert(0, HERE)

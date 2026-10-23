@@ -18,7 +18,7 @@
 #define PROTARIUM_VARIANT "protarium"
 #endif
 #ifndef PROTARIUM_DOMAIN
-#define PROTARIUM_DOMAIN "protarium.lol"
+#define PROTARIUM_DOMAIN "protarium.online"
 #endif
 
 enum class NascEnvironment : u8 {
