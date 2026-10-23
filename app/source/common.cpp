@@ -148,6 +148,9 @@ void drawLumaInfo(MainStruct *mainStruct) {
 Result WaitConnectedInternet(void) {
 	Result ret = 0;
 	u32 status = 0;
-	while((R_SUCCEEDED(ret = ACU_GetWifiStatus(&status)) || ret == 0xE0A09D2E) && status == 0); // Don't care about hardware switch or connecting to Internet (according to 3dbrew)
+	const u64 deadline = osGetTime() + 15000; // never wait forever for a Wi-Fi that is off
+	while((R_SUCCEEDED(ret = ACU_GetWifiStatus(&status)) || ret == 0xE0A09D2E) && status == 0) { // Don't care about hardware switch or connecting to Internet (according to 3dbrew)
+		if (osGetTime() > deadline) return MAKERESULT(RL_STATUS, RS_NOTFOUND, RM_APPLICATION, RD_TIMEOUT);
+	}
 	return ret;
 }

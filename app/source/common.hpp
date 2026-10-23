@@ -103,6 +103,7 @@ struct MainStruct {
 	bool needsReboot = false;
 	bool updateChecked = false;
 	bool repairChecked = false;
+	bool repairAnnounced = false; // the repair blocks on the network: show a message for a frame first
 
 	char errorString[256];
 

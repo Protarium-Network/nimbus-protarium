@@ -347,6 +347,8 @@ void MainUI::getNewHMAC(MainStruct *mainStruct, u32 pid, const char *password, s
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, std::format("{} {}.{}.{}", APP_TITLE, VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO).c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
     curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, std::format("pid={}&password={}", std::to_string(pid), urlencode(password)).c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlcb);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -611,6 +613,16 @@ bool MainUI::drawUI(MainStruct *mainStruct, C3D_RenderTarget* top_screen, C3D_Re
         }
 
         if (auto* pidHMACFixCheck = std::fopen("/3ds/nimbus/.pidhmac", "rb"); !pidHMACFixCheck && pretendo_account_index != 0) {
+            if (!mainStruct->repairAnnounced) {
+                // The repair blocks on the network and nothing can be drawn meanwhile: show what is going on first
+                // and do the work on the next frame.
+                mainStruct->repairAnnounced = true;
+                mainStruct->repairChecked = false;
+                C2D_SceneBegin(top_screen);
+                DrawString(0.5f, C2D_Color32(255, 255, 0, 0xFF), "Upgrading Pretendo account... Ensure you have an Internet connection", 0);
+                return false;
+            }
+
             mainStruct->errorString[0] = 0; // Clear potential previous error
             // TODO - This thing isn't drawn when Nimbus required an update beforehand. How do we make this text render in that case?
             // For now, we put a hint on the upgrade screen about Internet requirements
